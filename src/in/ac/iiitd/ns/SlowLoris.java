@@ -1,9 +1,10 @@
 package in.ac.iiitd.ns;
 
 import java.io.IOException;
-import java.net.InetAddress;
+import java.net.HttpURLConnection;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Executor;
@@ -82,16 +83,24 @@ public class SlowLoris {
         public void run() {
             // TODO Auto-generated method stub
             Socket socket = null;
+            HttpURLConnection connection = null;
             while(true){
                 try {
+                    /*
                     socket = new Socket(InetAddress.getByName(hostname), 80);
                     socket.setSoTimeout(timeout);
                     socket.getInputStream().read();
+                    // */
+                    connection = (HttpURLConnection) new URL(hostname.startsWith("http://")?hostname:"http://" + hostname).openConnection();
+                    connection.setConnectTimeout(timeout);
+                    connection.setReadTimeout(timeout);
+                    connection.setRequestMethod("HEAD");
+                    connection.getResponseCode();
                     clearDOSed();
                 } catch (SocketTimeoutException e) {
                     setDOSed();
                 } catch(IOException e){
-                    
+                    e.printStackTrace();
                 }
 
                 if(socket != null){
