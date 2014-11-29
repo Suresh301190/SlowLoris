@@ -16,7 +16,7 @@ import java.util.Date;
 public class Stats {
 
     // Global Parameters for statistics;
-    private String iter;
+    private int iter;
     private int pending;
     private int connected;
     private int closed;
@@ -60,10 +60,10 @@ public class Stats {
                     +"</body>\n"
                     +"</html>\n";
 
-    public Stats(String iter, int closed, int pending, int connected,
+    public Stats(int i, int closed, int pending, int connected,
             int isAvailable) {
         // TODO Auto-generated constructor stub
-        this.iter = iter;
+        this.iter = i;
         this.closed = closed;
         this.pending = pending;
         this.connected = connected;
@@ -84,13 +84,13 @@ public class Stats {
             table.append("<table class=\"slow_results\" border=\"0\">"
                     + "<tbody>"
                     + "<tr><th>Test parameters</th></tr>"
-                    + "<tr><tb>Hostname</tb><tb>" + SlowLoris.CLA.get("-h") + "</tb></tr>"
-                    + "<tr><tb>Port</tb><tb>" + SlowLoris.CLA.get("-p") + "</tb></tr>"
-                    + "<tr><tb>No. of Connections</tb><tb>" + SlowLoris.CLA.get("-c") + "</tb></tr>"
-                    + "<tr><tb>Interval Between Follow Up Data</tb><tb>" + SlowLoris.CLA.get("-i") + "</tb></tr>"
-                    + "<tr><tb>Target Test Duration</tb><tb>" + SlowLoris.CLA.get("-t") + "</tb></tr>"
-                    + "<tr><tb>Connections per second</tb><tb>" + SlowLoris.CLA.get("-r") + "</tb></tr>"
-                    + "<tr><tb>Timeout for probe</tb><tb>" + SlowLoris.CLA.get("-o") + "</tb></tr>"
+                    + "<tr><td>Hostname</td><td>" + SlowLoris.CLA.get("-h") + "</td></tr>"
+                    + "<tr><td>Port</td><td>" + SlowLoris.CLA.get("-p") + "</td></tr>"
+                    + "<tr><td>No. of Connections</td><td>" + SlowLoris.CLA.get("-c") + "</td></tr>"
+                    + "<tr><td>Interval Between Follow Up Data</td><td>" + SlowLoris.CLA.get("-i") + "</td></tr>"
+                    + "<tr><td>Target Test Duration</td><td>" + SlowLoris.CLA.get("-t") + "</td></tr>"
+                    + "<tr><td>Connections per second</td><td>" + SlowLoris.CLA.get("-r") + "</td></tr>"
+                    + "<tr><td>Timeout for probe</td><td>" + SlowLoris.CLA.get("-o") + "</td></tr>"
                     + "</tbody></table>");
 
             writer.write(String.format(HTML_FOOTER, SlowLoris.CLA.get("-h"), table.toString()));
@@ -98,12 +98,13 @@ public class Stats {
             writer.close();
         } catch (IOException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            if(SlowLoris.DEBUG)
+                e.printStackTrace();
         }
     }
 
     @Override
     public String toString(){
-        return "[" + iter + "," + closed + "," + pending + "," + connected + "," + isAvailable + "]";
+        return "['" + iter + "'," + closed + "," + pending + "," + connected + "," + isAvailable + "]";
     }
 }

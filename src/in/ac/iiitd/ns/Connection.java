@@ -97,14 +97,12 @@ public class Connection implements Runnable{
             slowloris.update(UPDATE_TYPE.CLOSED);
             System.exit(0);
         } catch (SocketException e) {
-            //e.printStackTrace();
             slowloris.update(UPDATE_TYPE.CLOSED);
-            if(SlowLoris.DEBUG)
-                if(SlowLoris.DEBUG)
-                    System.out.println("Thread had a socket error; attempting to rebuild.");
             try {
-                writer.close();
-                socket.close();
+                if(writer != null)
+                    writer.close();
+                if(socket != null)
+                    socket.close();
                 return;
             } catch (IOException e1) {
                 if(SlowLoris.DEBUG)

