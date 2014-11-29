@@ -1,0 +1,33 @@
+<!-- SlowHTTPTest Analysis chart (c) Sergey Shekyan, Victor Agababov 2011  -->
+ <html>
+  <head>
+ <style>
+    body { font: 12px/18px "Lucida Grande", "Lucida Sans Unicode", Helvetica, Arial, Verdana, sans-serif; background-color: transparent; color: #333; -webkit-font-smoothing: antialiased; } 
+    .slow_results {font-size: 12px; } 
+    </style>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      google.load("visualization", "1", {packages:["corechart"]});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Seconds');
+        data.addColumn('number', 'Closed');
+        data.addColumn('number', 'Pending');
+        data.addColumn('number', 'Connected');
+        data.addColumn('number', 'Service available');
+        data.addRows([
+['0',0,1000,0,1000], ['1',0,665,335,1000], ['2',0,658,342,0], ['3',0,658,342,0], ['4',0,632,368,0], ['5',0,632,368,0], ['6',0,632,368,0], ['7',0,632,368,0], ['8',0,614,386,0], ['9',0,614,386,0], ['10',0,614,386,0], ['11',0,614,386,0], ['12',0,614,386,0], ['13',0,614,386,0], ['14',0,614,386,0], ['15',0,614,386,0], ['16',0,613,387,0], ['17',0,613,387,0], ['18',0,613,387,0], ['19',0,613,387,0], ['20',0,613,387,0], ['21',0,613,387,0], ['22',0,613,387,0], ['23',0,613,387,0], ['24',0,413,587,0], ['25',0,413,587,0], ['26',0,413,587,0], ['27',0,413,587,0], ['28',0,413,587,0], ['29',0,413,587,0], ['30',0,413,587,0]        ]);
+var chart = new google.visualization.AreaChart(document.getElementById('chart_div'));
+            chart.draw(data, {'width': 600, 'height': 360, 'title': 'Test results against localhost',          hAxis: {'title': 'Seconds', 'titleTextStyle': {color: '#FF0000'}},
+        vAxis: {'title': 'Connections', 'titleTextStyle': {color: '#FF0000'}, 'viewWindowMode':'maximized'}
+  });
+  }
+  </script>
+<title>SlowHTTPTest(tm) Connection Results</title>
+</head>
+<body>
+      <p><table class="slow_results" border="0"><tbody><tr><th>Test parameters</th></tr><tr><td>Hostname</td><td>localhost</td></tr><tr><td>Port</td><td>80</td></tr><tr><td>No. of Connections</td><td>1000</td></tr><tr><td>Interval Between Follow Up Data</td><td>10000</td></tr><tr><td>Target Test Duration</td><td>30</td></tr><tr><td>Connections per second</td><td>200</td></tr><tr><td>Timeout for probe</td><td>5</td></tr></tbody></table></p>
+<div id="chart_div"></div>
+</body>
+</html>
