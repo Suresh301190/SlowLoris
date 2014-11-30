@@ -52,7 +52,7 @@ public class SlowLoris {
         CLA.put("-p", "80");            // port
         CLA.put("-c", "50");            // No. of connections
         CLA.put("-i", "10000");         // interval between headers
-        CLA.put("-t", "60");            // Test Timeout in seconds
+        CLA.put("-t", "120");            // Test Timeout in seconds
         CLA.put("-r", "50");            // Connections per seconds
         CLA.put("-d", "");              // Directory to output file
         CLA.put("-o", "5000");          // Ping Timeout
