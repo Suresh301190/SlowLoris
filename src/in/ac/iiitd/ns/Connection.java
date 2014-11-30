@@ -98,7 +98,7 @@ public class Connection implements Runnable{
             System.exit(0);
         } catch (SocketException e) {
             if(SlowLoris.DEBUG)
-                System.out.println(e.getMessage());
+                System.out.print(e.getMessage());
             slowloris.update(UPDATE_TYPE.CLOSED);
             try {
                 if(writer != null)

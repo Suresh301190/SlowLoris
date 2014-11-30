@@ -59,6 +59,16 @@ public class Stats {
                     +"<div id=\"chart_div\"></div>\n"
                     +"</body>\n"
                     +"</html>\n";
+    
+    private static final String CONSOLE_STATS = "SlowLoris Test status on %dth second:\n\n"
+            + "pending              : %d\n"
+            + "Connected            : %d\n"
+            + "closed               : %d\n"
+            + "Service Available    : %s\n";
+    
+    public static void printConsoleStats(Stats s){
+        System.out.format(CONSOLE_STATS, s.iter, s.pending, s.connected, s.closed, s.isAvailable != 0?"Yes":"No");
+    }
 
     public Stats(int i, int closed, int pending, int connected,
             int isAvailable) {
@@ -72,10 +82,11 @@ public class Stats {
 
     public static void genHTML(){
         try {
+            String path = SlowLoris.outDir + "SlowLoris_" 
+                    + new SimpleDateFormat("yyyy-MMM-dd HH:mm:ss").format(new Date()) 
+                    + ".html";
             BufferedWriter writer = 
-                    new BufferedWriter(new FileWriter(new File("SlowLoris_" 
-                            + new SimpleDateFormat("yyyy-MMM-dd HH:mm:ss").format(new Date()) 
-                            + ".html")));
+                    new BufferedWriter(new FileWriter(new File(path)));
             writer.write(HTML_HEADER);
             String s = SlowLoris.stats.toString();
             writer.write(s.substring(1, s.length() - 1));
@@ -96,6 +107,7 @@ public class Stats {
             writer.write(String.format(HTML_FOOTER, SlowLoris.CLA.get("-h"), table.toString()));
             writer.flush();
             writer.close();
+            System.out.println("\nCompleted Stats are stored in :\n" + path);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             if(SlowLoris.DEBUG)
