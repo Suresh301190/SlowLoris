@@ -64,7 +64,21 @@ public class Stats {
             + "pending              : %d\n"
             + "Connected            : %d\n"
             + "closed               : %d\n"
-            + "Service Available    : %s\n";
+            + "Service Available    : %s\n\n";
+    
+    private static final String CONSOLE_PARAM = "Test Parameters :"
+            + "\nHostname                         : " + SlowLoris.CLA.get("-h")
+            + "\nPort                             : " + SlowLoris.CLA.get("-p")
+            + "\nNo. of Connections               : " + SlowLoris.CLA.get("-c")
+            + "\nInterval Between Follow Up Data  : " + SlowLoris.CLA.get("-i")
+            + "\nTarget Test Duration             : " + SlowLoris.CLA.get("-t")
+            + "\nConnections per second           : " + SlowLoris.CLA.get("-r")
+            + "\nTimeout for probe                : " + SlowLoris.CLA.get("-o")
+            + "\n";
+    
+    public static void printConsoleParam(){
+        System.out.println(CONSOLE_PARAM);
+    }
     
     public static void printConsoleStats(Stats s){
         System.out.format(CONSOLE_STATS, s.iter, s.pending, s.connected, s.closed, s.isAvailable != 0?"Yes":"No");

