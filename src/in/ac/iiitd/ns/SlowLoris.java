@@ -34,10 +34,15 @@ public class SlowLoris {
     /** List of Command Line Arguments */
     final static HashMap<String, String> CLA = new HashMap<String, String>();
 
-    final static String USEAGE = "-h hostname\n -p port\n"
-            + "-c No_of_connections\n -i Interval_Between_Headers_in_ms\n"
-            + "-t test_Duration\n -r connections_per_s\n"
-            + "-d Output_directory\n -o probe Timeout\n";
+    final static String USEAGE = "To Use the Tool please tweak the following Parameters as necessary\n"
+            + "-h hostname\n"
+            + "-p port\n"
+            + "-c No_of_connections\n"
+            + "-i Interval_Between_Headers_in_ms\n"
+            + "-t test_Duration\n"
+            + "-r connections_per_s\n"
+            + "-d Output_directory\n"
+            + "-o probe Timeout\n";
 
     private final ExecutorService exec;
 
